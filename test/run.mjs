@@ -19,6 +19,10 @@ import { dirname, join } from 'node:path';
 import { loadCard, markup, freezeClock, now, check, contains, report }
   from './harness.mjs';
 
+// Git on Windows checks text files out with CRLF, and some checks below match a
+// multi-line block of a README, so the text is read with LF line endings.
+const readText = (path) => readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
+
 const HERE     = dirname(fileURLToPath(import.meta.url));
 const registry = await loadCard(sourcePath());
 const Card     = registry.get('ha-appliance-card');
@@ -8084,10 +8088,10 @@ check('borne : ni un statut reconnu', evMode(evR('SuspendedEVSE', { power_entity
 
 // The gallery shows it, and the README says it in both languages.
 {
-  const demo = readFileSync(join(HERE, '..', 'docs', 'demo.html'), 'utf8');
+  const demo = readText(join(HERE, '..', 'docs', 'demo.html'));
   check('galerie : la borne y est', /ev_charger: evCharger/.test(demo), true);
   for (const file of ['README.md', 'README.fr.md']) {
-    const md = readFileSync(join(HERE, '..', file), 'utf8');
+    const md = readText(join(HERE, '..', file));
     check(`${file} : ev_charger dans la liste des types`, /`fan` \\\| `ev_charger`/.test(md), true);
     for (const ty of ['toaster', 'air_purifier', 'fan', 'pet_fountain', 'hair_dryer'])
       check(`${file} : ${ty} dans la liste des types`, md.includes(`\\| \`${ty}\` \\|`), true);
@@ -8515,7 +8519,7 @@ check('borne : ni un statut reconnu', evMode(evR('SuspendedEVSE', { power_entity
 
   // The README says it in both languages.
   for (const file of ['README.md', 'README.fr.md']) {
-    const md = readFileSync(join(HERE, '..', file), 'utf8');
+    const md = readText(join(HERE, '..', file));
     check(`${file} : l option discharge_power_entity`, md.includes('`discharge_power_entity`'), true);
     check(`${file} : les mots qui disent la decharge`, md.includes('`Discharging`') && md.includes('`v2g_discharging`'), true);
     check(`${file} : l exemple OCPP`, md.includes('discharge_power_entity: sensor.wallbox_power_active_export'), true);
@@ -8570,7 +8574,7 @@ check('borne : ni un statut reconnu', evMode(evR('SuspendedEVSE', { power_entity
   // The README says it in both languages.
   for (const [file, nameRe, tapRe] of [['README.md', /\| `name` \| [^\n]*the type's name/, /\| `tap_action` \| [^\n]*in its place/],
     ['README.fr.md', /\| `name` \| [^\n]*le nom du type/, /\| `tap_action` \| [^\n]*à sa place/]]) {
-    const md = readFileSync(join(HERE, '..', file), 'utf8');
+    const md = readText(join(HERE, '..', file));
     check(`${file} : le titre sans entite d etat`, nameRe.test(md), true);
     check(`${file} : le toucher sans entite d etat`, tapRe.test(md), true);
   }
